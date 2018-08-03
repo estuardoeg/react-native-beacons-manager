@@ -3,7 +3,6 @@ package com.mackentoch.beaconsandroid;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -227,14 +226,22 @@ public class BeaconsAndroidModule extends ReactContextBaseJavaModule implements 
    **********************************************************************************************/
   @Override
   public void onBeaconServiceConnect() {
-    Log.v(LOG_TAG, "onBeaconServiceConnect");
+      new java.util.Timer().schedule(
+              new java.util.TimerTask() {
+                  @Override
+                  public void run() {
+                      Log.v(LOG_TAG, "onBeaconServiceConnect");
 
-    // deprecated since v2.9 (see github: https://github.com/AltBeacon/android-beacon-library/releases/tag/2.9)
-    // mBeaconManager.setMonitorNotifier(mMonitorNotifier);
-    // mBeaconManager.setRangeNotifier(mRangeNotifier);
-    mBeaconManager.addMonitorNotifier(mMonitorNotifier);
-    mBeaconManager.addRangeNotifier(mRangeNotifier);
-    sendEvent(mReactContext, "beaconServiceConnected", null);
+                      // deprecated since v2.9 (see github: https://github.com/AltBeacon/android-beacon-library/releases/tag/2.9)
+                      // mBeaconManager.setMonitorNotifier(mMonitorNotifier);
+                      // mBeaconManager.setRangeNotifier(mRangeNotifier);
+                      mBeaconManager.addMonitorNotifier(mMonitorNotifier);
+                      mBeaconManager.addRangeNotifier(mRangeNotifier);
+                      sendEvent(mReactContext, "beaconServiceConnected", null);
+                  }
+              },
+              500
+      );
   }
 
   @Override
@@ -394,9 +401,11 @@ public class BeaconsAndroidModule extends ReactContextBaseJavaModule implements 
    * Utils
    **********************************************************************************************/
   private void sendEvent(ReactContext reactContext, String eventName, @Nullable WritableMap params) {
-      reactContext
+      if (reactContext.hasActiveCatalystInstance()) {
+        reactContext
               .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
               .emit(eventName, params);
+      }
   }
 
   private Region createRegion(String regionId, String beaconUuid) {
